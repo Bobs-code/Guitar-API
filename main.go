@@ -4,8 +4,6 @@ import (
 	"fmt"
 )
 
-func main(){
-
-	fmt.Println("Yo it's the output")
+func main() {
+	fmt.Println("Checking that this thing works")
 }
-
