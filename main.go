@@ -1,21 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
 	_ "github.com/lib/pq"
-)
-
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "passwordplaceholder"
-	dbname   = "guitars"
 )
 
 type Guitar struct {
@@ -26,37 +17,32 @@ type Guitar struct {
 	Description string `json:"description"`
 }
 
-type Guitars []Guitar
+var Guitars []Guitar
 
-func getGuitars(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
-	// quick test
-	guitars := Guitars{
-		Guitar{Id: 1, Name: "Guitar Name"},
-	}
+func getGuitar(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	fmt.Println("Get single guitar endpoint hit")
+	json.NewEncoder(w).Encode(Guitars)
+}
 
-	json.NewEncoder(writer).Encode(guitars)
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "GuitarAPI Project Home Page")
+	fmt.Println("Endpoint Hit: Home Page")
 }
 
 func handleRequests() {
-	http.HandleFunc("/api/v1/Guitars", getGuitars)
-	fmt.Println("Endpoint Hit: All Guitars endpoint")
+	http.HandleFunc("/", homePage)
+	http.HandleFunc("/guitar", getGuitar)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func main() {
-	// handleRequests()
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s"+" password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
-
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("No error and successfully connected")
+	Guitars = append(Guitars, Guitar{
+		Id:          1,
+		Name:        "Guitar Name",
+		Brand_id:    1,
+		Year:        3035,
+		Description: "This is a description",
+	})
+	handleRequests()
 }
