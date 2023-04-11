@@ -11,10 +11,11 @@ import (
 )
 
 const (
+	// Replace constants with correct values
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = "passwordplaceholder"
+	password = "dbpasswordplaceholder"
 	dbname   = "guitars"
 )
 
@@ -26,26 +27,11 @@ type Guitar struct {
 	Description string `json:"description"`
 }
 
-var Guitars []Guitar
+type MultipleGuitars []Guitar
 
-func getGuitar(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "application/json")
-	fmt.Println("Get single guitar endpoint hit")
-	json.NewEncoder(w).Encode(Guitars)
-}
+var multipleGuitars MultipleGuitars
 
-func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "GuitarAPI Project Home Page")
-	fmt.Println("Endpoint Hit: Home Page")
-}
-
-func handleRequests() {
-	http.HandleFunc("/", homePage)
-	http.HandleFunc("/guitar", getGuitar)
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func dbConn() {
+func dbGetAllGuitars() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s"+" password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 	// Open Postgres connection using above login statement
 	db, err := sql.Open("postgres", psqlInfo)
@@ -57,17 +43,40 @@ func dbConn() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("No error and successfully connected")
+	// Query all Guitars from db
+	sql := "select * FROM guitars "
+	rows, err := db.Query(sql)
+	if err != nil {
+		fmt.Printf("Error Query, and %s", err)
+	}
+	for rows.Next() {
+		var eachGuitar Guitar
+		err = rows.Scan(&eachGuitar.Id, &eachGuitar.Name, &eachGuitar.Brand_id, &eachGuitar.Year, &eachGuitar.Description)
+		if err != nil {
+			fmt.Printf("error Looping data, and %s", err)
+		}
+		multipleGuitars = append(multipleGuitars, eachGuitar)
+	}
+}
+
+func getAllGuitars(w http.ResponseWriter, r *http.Request) {
+	dbGetAllGuitars()
+	w.Header().Set("Content-type", "application/json")
+	fmt.Println("Get single guitar endpoint hit")
+	json.NewEncoder(w).Encode(&multipleGuitars)
+}
+
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "GuitarAPI Project Home Page")
+	fmt.Println("Endpoint Hit: Home Page")
+}
+
+func handleRequests() {
+	http.HandleFunc("/", homePage)
+	http.HandleFunc("/guitar", getAllGuitars)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func main() {
-	Guitars = append(Guitars, Guitar{
-		Id:          1,
-		Name:        "Guitar Name",
-		Brand_id:    1,
-		Year:        3035,
-		Description: "This is a description",
-	})
-	dbConn()
 	handleRequests()
 }
