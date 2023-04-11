@@ -63,7 +63,11 @@ func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	dbGetAllGuitars()
 	w.Header().Set("Content-type", "application/json")
 	fmt.Println("Get single guitar endpoint hit")
-	json.NewEncoder(w).Encode(&multipleGuitars)
+	err := json.NewEncoder(w).Encode(&multipleGuitars)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
 }
 
 func homePage(w http.ResponseWriter, r *http.Request) {
