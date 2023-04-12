@@ -27,11 +27,10 @@ type Guitar struct {
 	Description string `json:"description"`
 }
 
-type MultipleGuitars []Guitar
+func dbGetAllGuitars() []Guitar {
 
-var multipleGuitars MultipleGuitars
+	var multipleGuitars []Guitar
 
-func dbGetAllGuitars() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s"+" password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 	// Open Postgres connection using above login statement
 	db, err := sql.Open("postgres", psqlInfo)
@@ -49,6 +48,7 @@ func dbGetAllGuitars() {
 	if err != nil {
 		fmt.Printf("Error Query, and %s", err)
 	}
+
 	for rows.Next() {
 		var eachGuitar Guitar
 		err = rows.Scan(&eachGuitar.Id, &eachGuitar.Name, &eachGuitar.Brand_id, &eachGuitar.Year, &eachGuitar.Description)
@@ -57,13 +57,14 @@ func dbGetAllGuitars() {
 		}
 		multipleGuitars = append(multipleGuitars, eachGuitar)
 	}
+	return multipleGuitars
 }
 
 func getAllGuitars(w http.ResponseWriter, r *http.Request) {
-	dbGetAllGuitars()
+	data := dbGetAllGuitars()
 	w.Header().Set("Content-type", "application/json")
 	fmt.Println("Get single guitar endpoint hit")
-	err := json.NewEncoder(w).Encode(&multipleGuitars)
+	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
