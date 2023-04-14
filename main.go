@@ -15,7 +15,7 @@ const (
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = "dbpasswordplaceholder"
+	password = "!1005XOctoberX!2989"
 	dbname   = "guitars"
 )
 
@@ -27,23 +27,29 @@ type Guitar struct {
 	Description string `json:"description"`
 }
 
-func dbGetAllGuitars() []Guitar {
-
-	var multipleGuitars []Guitar
-
+// Make connection to the database
+func dbConnection() *sql.DB {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s"+" password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 	// Open Postgres connection using above login statement
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
+	// defer db.Close()
 	err = db.Ping()
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Successfully connected to database")
+	return db
+}
+
+// Select all guitars from database
+func dbReturnAllGuitars() []Guitar {
+	db := dbConnection()
+	var multipleGuitars []Guitar
 	// Query all Guitars from db
-	sql := "select * FROM guitars "
+	sql := "SELECT * FROM guitars "
 	rows, err := db.Query(sql)
 	if err != nil {
 		fmt.Printf("Error Query, and %s", err)
@@ -60,8 +66,9 @@ func dbGetAllGuitars() []Guitar {
 	return multipleGuitars
 }
 
+// GET request for return data from dbReturnAllGuitars()
 func getAllGuitars(w http.ResponseWriter, r *http.Request) {
-	data := dbGetAllGuitars()
+	data := dbReturnAllGuitars()
 	w.Header().Set("Content-type", "application/json")
 	fmt.Println("Get single guitar endpoint hit")
 	err := json.NewEncoder(w).Encode(data)
@@ -71,6 +78,33 @@ func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// POST request adding a guitar to the database
+func addGuitar(w http.ResponseWriter, r *http.Request) {
+	db := dbConnection()
+	defer db.Close()
+	w.Header().Set("Content-type", "application/json")
+
+	var guitar Guitar
+	err := json.NewDecoder(r.Body).Decode(&guitar)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	sqlStatement := `
+	INSERT INTO guitars (name, brand_id, year, description)
+	VALUES ($1, $2, $3, $4)
+	returning id`
+	id := 0
+	err = db.QueryRow(sqlStatement, guitar.Name, guitar.Brand_id, guitar.Year, guitar.Description).Scan(&id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(w, "Item with ID %d was created", id)
+}
+
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "GuitarAPI Project Home Page")
 	fmt.Println("Endpoint Hit: Home Page")
@@ -78,7 +112,8 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 
 func handleRequests() {
 	http.HandleFunc("/", homePage)
-	http.HandleFunc("/guitar", getAllGuitars)
+	http.HandleFunc("/guitars", getAllGuitars)
+	http.HandleFunc("/new", addGuitar)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
