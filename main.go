@@ -74,9 +74,10 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	json.NewEncoder(w).Encode(singleGuitar)
+	err = json.NewEncoder(w).Encode(singleGuitar)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
