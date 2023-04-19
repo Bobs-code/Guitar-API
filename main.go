@@ -45,7 +45,7 @@ func dbConnection() *sql.DB {
 	return db
 }
 
-// GET guitar record form dbQuerySingleRecord
+// * GET guitar record form dbQuerySingleRecord
 func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	db := dbConnection()
@@ -81,7 +81,7 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// SELECT all guitars from database
+// TODO SELECT all guitars from database
 func dbQueryAllGuitars() []Guitar {
 	db := dbConnection()
 	var multipleGuitars []Guitar
@@ -103,7 +103,7 @@ func dbQueryAllGuitars() []Guitar {
 	return multipleGuitars
 }
 
-// GET request to return data from dbReturnAllGuitars()
+// TODO GET request to return data from dbReturnAllGuitars()
 func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	data := dbQueryAllGuitars()
 	w.Header().Set("Content-type", "application/json")
@@ -115,7 +115,7 @@ func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST request INSERTING a guitar to the database
+// ? POST request INSERTING a guitar to the database
 func addGuitar(w http.ResponseWriter, r *http.Request) {
 	db := dbConnection()
 	defer db.Close()
@@ -142,6 +142,34 @@ func addGuitar(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Item with ID %d was created", id)
 }
 
+// DELETE request
+func deleteGuitar(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	db := dbConnection()
+
+	// To retrieve a particular record form the database, we need to pass an id paremeter to the URL. We will use the following methods and assign it to the urlId variable
+	urlId := r.URL.Query().Get("id")
+
+	// To add a layer of security, we will cast the urlId param to an integer from a string. This will be passed into the database query below.
+	urlIdInt, err := strconv.Atoi(urlId)
+	if err != nil {
+		panic(err)
+	}
+
+	sqlStatement := "DELETE FROM guitars WHERE id = $1;"
+
+	res, err := db.Exec(sqlStatement, urlIdInt)
+	if err != nil {
+		panic(err)
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(count)
+	defer db.Close()
+}
+
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "GuitarAPI Project Home Page")
 	fmt.Println("Endpoint Hit: Home Page")
@@ -152,6 +180,7 @@ func handleRequests() {
 	http.HandleFunc("/guitar", getSingleGuitar)
 	http.HandleFunc("/guitars", getAllGuitars)
 	http.HandleFunc("/new", addGuitar)
+	http.HandleFunc("/delete", deleteGuitar)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
