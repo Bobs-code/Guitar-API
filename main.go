@@ -45,7 +45,7 @@ func dbConnection() *sql.DB {
 	return db
 }
 
-// * GET guitar record form dbQuerySingleRecord
+// GET guitar record form dbQuerySingleRecord
 func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	db := dbConnection()
@@ -81,7 +81,7 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO SELECT all guitars from database
+// SELECT all guitars from database
 func dbQueryAllGuitars() []Guitar {
 	db := dbConnection()
 	var multipleGuitars []Guitar
@@ -103,7 +103,7 @@ func dbQueryAllGuitars() []Guitar {
 	return multipleGuitars
 }
 
-// TODO GET request to return data from dbReturnAllGuitars()
+// GET request to return data from dbReturnAllGuitars()
 func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	data := dbQueryAllGuitars()
 	w.Header().Set("Content-type", "application/json")
