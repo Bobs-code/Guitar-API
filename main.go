@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	_ "github.com/lib/pq"
 )
@@ -15,7 +16,7 @@ const (
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = "!1005XOctoberX!2989"
+	password = "placeholder"
 	dbname   = "guitars"
 )
 
@@ -44,8 +45,43 @@ func dbConnection() *sql.DB {
 	return db
 }
 
-// Select all guitars from database
-func dbReturnAllGuitars() []Guitar {
+// GET guitar record form dbQuerySingleRecord
+func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	db := dbConnection()
+	defer db.Close()
+	// To retrieve a particular record form the database, we need to pass an id paremeter to the URL. We will use the following methods and assign it to the urlId variable
+	urlId := r.URL.Query().Get("id")
+
+	// To add a layer of security, we will cast the urlId param to an integer from a string. This will be passed into the database query below.
+	urlIdInt, err := strconv.Atoi(urlId)
+	if err != nil {
+		panic(err)
+	}
+
+	sqlStatement := "SELECT * FROM guitars WHERE id = $1;"
+
+	row := db.QueryRow(sqlStatement, urlIdInt)
+
+	var singleGuitar Guitar
+
+	switch err := row.Scan(&singleGuitar.Id, &singleGuitar.Name, &singleGuitar.Brand_id, &singleGuitar.Year, &singleGuitar.Description); err {
+	case sql.ErrNoRows:
+		fmt.Println("No rows were returned!")
+	case nil:
+		fmt.Println(`Record from the database: `, singleGuitar)
+	default:
+		panic(err)
+	}
+
+	json.NewEncoder(w).Encode(singleGuitar)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+}
+
+// SELECT all guitars from database
+func dbQueryAllGuitars() []Guitar {
 	db := dbConnection()
 	var multipleGuitars []Guitar
 	// Query all Guitars from db
@@ -66,9 +102,9 @@ func dbReturnAllGuitars() []Guitar {
 	return multipleGuitars
 }
 
-// GET request for return data from dbReturnAllGuitars()
+// GET request to return data from dbReturnAllGuitars()
 func getAllGuitars(w http.ResponseWriter, r *http.Request) {
-	data := dbReturnAllGuitars()
+	data := dbQueryAllGuitars()
 	w.Header().Set("Content-type", "application/json")
 	fmt.Println("Get single guitar endpoint hit")
 	err := json.NewEncoder(w).Encode(data)
@@ -78,7 +114,7 @@ func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST request adding a guitar to the database
+// POST request INSERTING a guitar to the database
 func addGuitar(w http.ResponseWriter, r *http.Request) {
 	db := dbConnection()
 	defer db.Close()
@@ -112,6 +148,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 
 func handleRequests() {
 	http.HandleFunc("/", homePage)
+	http.HandleFunc("/guitar", getSingleGuitar)
 	http.HandleFunc("/guitars", getAllGuitars)
 	http.HandleFunc("/new", addGuitar)
 	log.Fatal(http.ListenAndServe(":8080", nil))
