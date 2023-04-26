@@ -45,6 +45,28 @@ func dbConnection() *sql.DB {
 	return db
 }
 
+// SELECT all guitars from database
+func dbQueryAllGuitars() []Guitar {
+	db := dbConnection()
+	var multipleGuitars []Guitar
+	// Query all Guitars from db
+	sql := "SELECT * FROM guitars "
+	rows, err := db.Query(sql)
+	if err != nil {
+		fmt.Printf("Error Query, and %s", err)
+	}
+
+	for rows.Next() {
+		var eachGuitar Guitar
+		err = rows.Scan(&eachGuitar.Id, &eachGuitar.Name, &eachGuitar.Brand_id, &eachGuitar.Year, &eachGuitar.Description)
+		if err != nil {
+			fmt.Printf("error Looping data, and %s", err)
+		}
+		multipleGuitars = append(multipleGuitars, eachGuitar)
+	}
+	return multipleGuitars
+}
+
 // GET guitar record form dbQuerySingleRecord
 func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -81,28 +103,6 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// SELECT all guitars from database
-func dbQueryAllGuitars() []Guitar {
-	db := dbConnection()
-	var multipleGuitars []Guitar
-	// Query all Guitars from db
-	sql := "SELECT * FROM guitars "
-	rows, err := db.Query(sql)
-	if err != nil {
-		fmt.Printf("Error Query, and %s", err)
-	}
-
-	for rows.Next() {
-		var eachGuitar Guitar
-		err = rows.Scan(&eachGuitar.Id, &eachGuitar.Name, &eachGuitar.Brand_id, &eachGuitar.Year, &eachGuitar.Description)
-		if err != nil {
-			fmt.Printf("error Looping data, and %s", err)
-		}
-		multipleGuitars = append(multipleGuitars, eachGuitar)
-	}
-	return multipleGuitars
-}
-
 // GET request to return data from dbReturnAllGuitars()
 func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	data := dbQueryAllGuitars()
@@ -115,8 +115,8 @@ func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ? POST request INSERTING a guitar to the database
-func addGuitar(w http.ResponseWriter, r *http.Request) {
+// POST request INSERTING a guitar to the database
+func newGuitar(w http.ResponseWriter, r *http.Request) {
 	db := dbConnection()
 	defer db.Close()
 	w.Header().Set("Content-type", "application/json")
@@ -170,6 +170,42 @@ func deleteGuitar(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 }
 
+// Update request
+func updateGuitar(w http.ResponseWriter, r *http.Request) {
+	db := dbConnection()
+	defer db.Close()
+
+	w.Header().Set("Content-Type", "application/json")
+
+	urlId := r.URL.Query().Get("id")
+
+	urlIdInt, err := strconv.Atoi(urlId)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var guitar Guitar
+
+	err = json.NewDecoder(r.Body).Decode(&guitar)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	sqlStatement := `
+	UPDATE guitars
+	SET name = $2, brand_id = $3, year = $4, description = $5
+	WHERE ID = $1;
+	`
+	_, err = db.Exec(sqlStatement, urlIdInt, guitar.Name, guitar.Brand_id, guitar.Year, guitar.Description)
+	if err != nil {
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+}
+
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "GuitarAPI Project Home Page")
 	fmt.Println("Endpoint Hit: Home Page")
@@ -179,8 +215,9 @@ func handleRequests() {
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/guitar", getSingleGuitar)
 	http.HandleFunc("/guitars", getAllGuitars)
-	http.HandleFunc("/new", addGuitar)
-	http.HandleFunc("/delete", deleteGuitar)
+	http.HandleFunc("/guitar/create", newGuitar)
+	http.HandleFunc("/guitar/update", updateGuitar)
+	http.HandleFunc("/guitar/delete", deleteGuitar)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
