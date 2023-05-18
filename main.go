@@ -22,8 +22,8 @@ const (
 
 type Guitar struct {
 	Id          int    `json:"id"`
-	Name        string `json:"name"`
 	Brand_id    int    `json:"brand_id"`
+	Model       string `json:"model"`
 	Year        int    `json:"year"`
 	Description string `json:"description"`
 }
@@ -58,7 +58,7 @@ func dbQueryAllGuitars() []Guitar {
 
 	for rows.Next() {
 		var eachGuitar Guitar
-		err = rows.Scan(&eachGuitar.Id, &eachGuitar.Name, &eachGuitar.Brand_id, &eachGuitar.Year, &eachGuitar.Description)
+		err = rows.Scan(&eachGuitar.Id, &eachGuitar.Brand_id, &eachGuitar.Model, &eachGuitar.Year, &eachGuitar.Description)
 		if err != nil {
 			fmt.Printf("error Looping data, and %s", err)
 		}
@@ -87,7 +87,7 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 
 	var singleGuitar Guitar
 
-	switch err := row.Scan(&singleGuitar.Id, &singleGuitar.Name, &singleGuitar.Brand_id, &singleGuitar.Year, &singleGuitar.Description); err {
+	switch err := row.Scan(&singleGuitar.Id, &singleGuitar.Brand_id, &singleGuitar.Model, &singleGuitar.Year, &singleGuitar.Description); err {
 	case sql.ErrNoRows:
 		fmt.Println("No rows were returned!")
 	case nil:
@@ -129,11 +129,11 @@ func newGuitar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sqlStatement := `
-	INSERT INTO guitars (name, brand_id, year, description)
+	INSERT INTO guitars (brand_id, model, year, description)
 	VALUES ($1, $2, $3, $4)
 	returning id`
 	id := 0
-	err = db.QueryRow(sqlStatement, guitar.Name, guitar.Brand_id, guitar.Year, guitar.Description).Scan(&id)
+	err = db.QueryRow(sqlStatement, guitar.Brand_id, guitar.Model, guitar.Year, guitar.Description).Scan(&id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -195,10 +195,10 @@ func updateGuitar(w http.ResponseWriter, r *http.Request) {
 
 	sqlStatement := `
 	UPDATE guitars
-	SET name = $2, brand_id = $3, year = $4, description = $5
+	SET brand_id = $2, model = $3, year = $4, description = $5
 	WHERE ID = $1;
 	`
-	_, err = db.Exec(sqlStatement, urlIdInt, guitar.Name, guitar.Brand_id, guitar.Year, guitar.Description)
+	_, err = db.Exec(sqlStatement, urlIdInt, guitar.Brand_id, guitar.Model, guitar.Year, guitar.Description)
 	if err != nil {
 		panic(err)
 	}
