@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,29 +12,51 @@ import (
 
 // Tests Home Page Handle
 func TestHomePage(t *testing.T) {
-	req, err := http.NewRequest("GET", "localhost:8080/", nil)
-	if err != nil {
-		t.Fatalf("Could not create request: %v", err)
+	tt := []struct {
+		name  string
+		value string
+		ret   string
+		err   string
+	}{
+		{name: "Home Page Request Test", value: "/", ret: "GuitarAPI Project Home Page"},
 	}
-	rec := httptest.NewRecorder()
 
-	HomePage(rec, req)
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", "localhost:8080"+tc.value, nil)
+			if err != nil {
+				t.Fatalf("Could not create request: %v", err)
+			}
+			rec := httptest.NewRecorder()
 
-	res := rec.Result()
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("expected status OK; got %v", res)
-	}
-	b, err := io.ReadAll(res.Body)
-	if err != nil {
-		t.Fatalf("could not read response: %v", err)
-	}
-	d := string(b)
-	// if err != nil {
-	// 	t.Fatalf("expected an integer; got %s", err)
-	// }
-	if d != "GuitarAPI Project Home Page" {
-		t.Fatalf("expected home page welcome; got %v", d)
+			HomePage(rec, req)
+			res := rec.Result()
+			defer res.Body.Close()
+			b, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatalf("could not read response: %v", err)
+			}
+			if tc.err != "" {
+				if res.StatusCode != http.StatusBadRequest {
+					t.Errorf("expected STatus Bad Request; got %v", res.Status)
+				}
+				if msg := string(bytes.TrimSpace(b)); msg != tc.err {
+					t.Errorf("expected message %q; got %q", tc.err, msg)
+				}
+				return
+			}
+			if res.StatusCode != http.StatusOK {
+				t.Errorf("expected status OK; got %v", res.Status)
+			}
+
+			d := string(b)
+			// if err != nil {
+			// 	t.Fatalf("expected an integer; got %s", err)
+			// }
+			if d != tc.ret {
+				t.Fatalf("expected %v; got %v", tc.ret, d)
+			}
+		})
 	}
 
 }
