@@ -206,13 +206,13 @@ func updateGuitar(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func HomePage(w http.ResponseWriter, r *http.Request) {
+func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "GuitarAPI Project Home Page")
 	fmt.Println("Endpoint Hit: Home Page")
 }
 
 func handleRequests() {
-	http.HandleFunc("/", HomePage)
+	http.HandleFunc("/", homePage)
 	http.HandleFunc("/guitar", getSingleGuitar)
 	http.HandleFunc("/guitars", getAllGuitars)
 	http.HandleFunc("/guitar/create", newGuitar)

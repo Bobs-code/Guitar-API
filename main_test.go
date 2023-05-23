@@ -29,7 +29,7 @@ func TestHomePage(t *testing.T) {
 			}
 			rec := httptest.NewRecorder()
 
-			HomePage(rec, req)
+			homePage(rec, req)
 			res := rec.Result()
 			defer res.Body.Close()
 			b, err := io.ReadAll(res.Body)
