@@ -1,0 +1,145 @@
+openapi: "3.0.0"
+info:
+    version: "1.0.0"
+    title: "Guitar API"
+    description: Reference basic information on important guitar models
+
+servers:
+    - url: "http://localhost:8080"
+paths:
+    /guitar:
+        get:
+            summary: Return all guitars
+            description: Allows you to retrieve all guitars
+            operationId: getGuitars
+            responses:
+                200:
+                    description: successfully returned all guitars
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items: 
+                                    $ref: "#/components/schemas/guitar"
+                            examples:
+                                guitars:
+                                    value: {
+                                        $ref: "#/components/schemas/guitar"
+                                    }
+                                
+
+    /guitar/{guitarId}:
+        parameters:
+            - name: guitarId
+              description: The unique identifier of the guitar
+              in: path
+              required: true
+              schema:
+                  $ref: "#/components/schemas/guitarId"
+        get:
+            summary: Read a guitar
+            responses:
+                "200":
+                    description: The guitar corresponding to the provided `guitarId`
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/guitar"
+                404:
+                    description: No guitar found for the provided `guitarId`
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                500:
+                    description: Unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+    /guitar/create:
+        post:
+            summary: Add guitar
+            description: This allows you to add a single guitar
+            operationId: addGuitar
+            requestBody:
+                content:
+                    "application/json":
+                        schema:
+                            $ref: "#/components/schemas/guitar"
+                        examples:
+                            guitar:
+                                value: {
+                                    id: 1,
+                                    brandID: 1,
+                                    model: "Jazz Bass",
+                                    year: 2023,
+                                    description: "Description of Fender Jazz Bass"
+                                }
+            responses:
+                201:
+                    description: Guitar successfully added
+    /guitar/update/{guitarId}:
+        parameters:
+            - name: guitarId
+              description: The unique identifier of the guitar
+              in: path
+              required: true
+              schema:
+                  $ref: "#/components/schemas/guitarId"
+        put:
+            summary: Update guitar
+            description: This allows you to update the fields of a guitar
+            operationId: updateGuitar
+            requestBody:
+                content:
+                    "application/json":
+                        schema:
+                            $ref: "#/components/schemas/guitar"
+            responses:
+                "200":
+                    description: Guitar Updated
+    /guitar/delete/{guitarId}:
+        parameters:
+            - name: guitarId
+              description: The unique identifier of the guitar
+              in: path
+              required: true
+              schema:
+                  $ref: "#/components/schemas/guitarId"
+components:
+    schemas:
+        guitars: 
+            type: array
+            items: 
+                $ref: "#/components/schemas/guitar"
+        guitarId:
+            type: integer
+            description: The unique identifier of a guitar
+        guitar:
+            type: object
+            required:
+                - id
+            properties:
+                id:
+                    $ref: "#/components/schemas/guitarId"
+                brandId:
+                    type: integer
+                    description: brand id linked to the guitar
+                model:
+                    type: string
+                    description: The name of the guitar model
+                year:
+                    type: integer
+                    description: The year the guitar model was manufactured
+                guitarDescription:
+                    type: string
+                    description: General product summary for the guitar model
+        Error:
+            type: object
+            required:
+                - message
+            properties:
+                message:
+                    description: A human readable error message
+                    type: string
