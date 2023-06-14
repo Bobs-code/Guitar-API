@@ -3,7 +3,7 @@ info:
   title: Guitar API
   description: |-
    Reference Basic infromation on guitar models and the musicians that have used them at various points in their careers.
-    - [Gitar API Repository](https://github.com/Bobs-code/Guitar-API)
+    - [Guitar API Repository](https://github.com/Bobs-code/Guitar-API)
   contact:
     email: robertgriffintm@gmail.com
   license:
@@ -14,7 +14,7 @@ servers:
   - url: http://localhost:8080
 tags:
   - name: guitar
-    description: Everuthing about popular guitar models
+    description: Everything about popular guitar models
     externalDocs:
       description: Find out more
       url: http://swagger.io
@@ -23,8 +23,8 @@ paths:
     get:
       tags: 
         - guitar
-      summary: Find a guitar by ID
-      description: Returns a single guitar
+      summary: find a guitar by ID
+      description: returns a single guitar
       operationId: getGuitarByID
       parameters:
         - name: guitarId
@@ -35,7 +35,7 @@ paths:
           description: Id of guitar to return
       responses:
         200:
-          description: The requested guitar
+          description: returned requested guitar
           content:
             application/json:
               schema:
@@ -43,8 +43,8 @@ paths:
     post:
       tags: 
         - guitar
-      summary: Add a guitar
-      description: Add a guitar to the catalog
+      summary: add guitar
+      description: add a guitar to the catalog
       operationId: addGuitar
       requestBody:
         content:
@@ -53,18 +53,18 @@ paths:
               $ref: '#/components/schemas/guitar'
       responses:
         201:
-          description: The Guitar has been added
+          description: Guitar successfully added
     delete:
       tags: 
           - guitar
-      summary: Delete a guitar
+      summary: delete a guitar
       parameters:
         - in: query
           name: id
           schema:
             type: integer
           required: true
-          description: ID of the guitar to be deleted
+          description: Id of guitar to be deleted
       responses:
         '204':
           description: Guitar successfully deleted
@@ -75,8 +75,8 @@ paths:
     put:
       tags: 
         - guitar
-      summary: Update guitar
-      description: This allows you to update the fields of a guitar
+      summary: update guitar
+      description: update specific fields of a guitar
       operationId: updateGuitar
       requestBody:
           content:
@@ -84,16 +84,16 @@ paths:
                   schema:
                       $ref: "#/components/schemas/guitar"
       responses:
-          "200":
-              description: Guitar Updated
-  /guitars:      
+          "202":
+              description: guitar update accepted
+  /guitars:       
     get:
       tags: 
         - guitar
-      summary: Retrieve all guitars
+      summary: retrieve all guitars
       responses:
         '200':
-          description: Successful response
+          description: retrieved all guitars
           content:
             application/json:
               schema:
@@ -120,5 +120,3 @@ components:
         Description:
           type: string
           example: "Versatile guitar suitable for multiple musical genres"
-    
-  
