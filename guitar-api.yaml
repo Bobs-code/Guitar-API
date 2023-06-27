@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: Guitar API
+  description: |-
+   Reference Basic infromation on guitar models and the musicians that have used them at various points in their careers.
+    - [Guitar API Repository](https://github.com/Bobs-code/Guitar-API)
+  contact:
+    email: robertgriffintm@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: guitar
+    description: Everything about popular guitar models
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+paths:
+  /guitar:
+    get:
+      tags: 
+        - guitar
+      summary: find a guitar by ID
+      description: returns a single guitar
+      operationId: getGuitarByID
+      parameters:
+        - name: guitar_id
+          in: path
+          schema:
+            type: integer
+          required: true
+          description: Id of guitar to return
+      responses:
+        200:
+          description: returned requested guitar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/guitar'
+    post:
+      tags: 
+        - guitar
+      summary: add guitar
+      description: add a guitar to the catalog
+      operationId: addGuitar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/guitar'
+      responses:
+        201:
+          description: Guitar successfully added
+    delete:
+      tags: 
+          - guitar
+      summary: delete a guitar
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Id of guitar to be deleted
+      responses:
+        '204':
+          description: Guitar successfully deleted
+        '400':
+          description: Invalid ID provided
+        '500':
+          description: Internal server error
+    patch:
+      tags: 
+        - guitar
+      summary: update guitar
+      description: update specific fields of a guitar
+      operationId: updateGuitar
+      requestBody:
+          content:
+              "application/json":
+                  schema:
+                      $ref: "#/components/schemas/guitar"
+      responses:
+          "202":
+              description: guitar update accepted
+  /guitars:       
+    get:
+      tags: 
+        - guitar
+      summary: retrieve all guitars
+      responses:
+        '200':
+          description: retrieved all guitars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/guitar'
+components:
+  schemas:
+    guitar:
+      type: object
+      properties:
+        Id:
+          type: integer
+          example: 17
+        Brand_id:
+          type: integer
+          example: 1
+        Model:
+          type: string
+          example: "Stratocaster"
+        Year:
+          type: integer
+          example: 2023
+        Description:
+          type: string
+          example: "Versatile guitar suitable for multiple musical genres"
