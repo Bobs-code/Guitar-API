@@ -1,13 +1,5 @@
 # Guitar API
 
-## Table of Contents
-- [Description](#description) :page_with_curl:
-- [Requirements](#requirements) :hammer_and_wrench:
-- [Getting Started](#getting-started)
-   - [Installation](#installation)
-- [Documentation](#official-documentation)
-- [Feature Roadmap](#feature-roadmap)
-
 ## Description 
 The Guitar API is a RESTful API that provides information about various guitar makes and modes, along with information about famous mucisians who have used those models at some point in their careers. This API allows developers to access ruitar-related information to build applications, websites, or any other projects that require guitar-related data.
 
@@ -17,21 +9,21 @@ The Guitar API is a RESTful API that provides information about various guitar m
    - For storing and retrieving API database information
 - pgAdmin
 - API Testing Tool
-   - [Postman][https://www.postman.com/] or something similar
+   - [Postman](https://www.postman.com/) or something similar
 
 ## Getting Started
 In it's current version, the API requires the above tools to be installed locally on one's machine. Continue below for installation docs to install each of the tools on your operating system.
 
-### Installation
-#### - [Go](https://go.dev/doc/install)
-#### - [PostgreSQL](https://www.postgresql.org/download/)
+### Setup
+- [Go](https://go.dev/doc/install)
+- [PostgreSQL](https://www.postgresql.org/download/)
    - [Getting Started Tutorial](https://www.postgresql.org/docs/current/tutorial.html)
-#### - [pgAdmin](https://www.pgadmin.org/download/)
-#### - Download repo into local file directory 
+- [pgAdmin](https://www.pgadmin.org/download/)
+- Download repo into local file directory 
  - `git clone https://github.com/Bobs-code/Guitar-API.git`
 
-### Import database file into Postgres
-- Using pgAdmin: 
+#### Import database file into Postgres
+Using pgAdmin: 
   1. Navigate to and select "Databases" > "Create" > "Database..."
   2. Name database and select "Save"
   3. Right Click Database and select "Restore..."
