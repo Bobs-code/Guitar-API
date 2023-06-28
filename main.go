@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi"
 	_ "github.com/lib/pq"
 )
 
@@ -73,7 +74,8 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 	db := dbConnection()
 	defer db.Close()
 	// To retrieve a particular record form the database, we need to pass an id paremeter to the URL. We will use the following methods and assign it to the urlId variable
-	urlId := r.URL.Query().Get("id")
+	// urlId := r.URL.Query().Get("id")
+	urlId := chi.URLParam(r, "guitarId")
 
 	// To add a layer of security, we will cast the urlId param to an integer from a string. This will be passed into the database query below.
 	urlIdInt, err := strconv.Atoi(urlId)
@@ -107,7 +109,7 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 func getAllGuitars(w http.ResponseWriter, r *http.Request) {
 	data := dbQueryAllGuitars()
 	w.Header().Set("Content-type", "application/json")
-	fmt.Println("Get single guitar endpoint hit")
+	fmt.Println("All Guitars endpoint hit")
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -212,13 +214,18 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRequests() {
+	r := chi.NewRouter()
+	r.Route("/guitars", func(r chi.Router) {
+		r.Get("/", getAllGuitars)
+		r.Get("/{guitarId}", getSingleGuitar)
+	})
 	http.HandleFunc("/", homePage)
-	http.HandleFunc("/guitar", getSingleGuitar)
-	http.HandleFunc("/guitars", getAllGuitars)
+	// http.HandleFunc("/guitar", getSingleGuitar)
+	// http.HandleFunc("/guitars", getAllGuitars)
 	http.HandleFunc("/guitar/create", newGuitar)
 	http.HandleFunc("/guitar/update", updateGuitar)
 	http.HandleFunc("/guitar/delete", deleteGuitar)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
 func main() {
