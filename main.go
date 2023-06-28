@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-chi/chi"
 	_ "github.com/lib/pq"
 )
 
@@ -17,7 +16,7 @@ const (
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = "!1005XOctoberX!2989"
+	password = "placeholder"
 	dbname   = "guitars"
 )
 
@@ -74,8 +73,7 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 	db := dbConnection()
 	defer db.Close()
 	// To retrieve a particular record form the database, we need to pass an id paremeter to the URL. We will use the following methods and assign it to the urlId variable
-	// urlId := r.URL.Query().Get("id")
-	urlId := chi.URLParam(r, "guitarId")
+	urlId := r.URL.Query().Get("id")
 
 	// To add a layer of security, we will cast the urlId param to an integer from a string. This will be passed into the database query below.
 	urlIdInt, err := strconv.Atoi(urlId)
@@ -214,16 +212,13 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRequests() {
-	r := chi.NewRouter()
-	r.Route("/guitars", func(r chi.Router) {
-		r.Get("/", getAllGuitars)
-		r.Get("/{guitarId}", getSingleGuitar)
-	})
 	http.HandleFunc("/", homePage)
+	http.HandleFunc("/guitar", getSingleGuitar)
+	http.HandleFunc("/guitars", getAllGuitars)
 	http.HandleFunc("/guitar/create", newGuitar)
 	http.HandleFunc("/guitar/update", updateGuitar)
 	http.HandleFunc("/guitar/delete", deleteGuitar)
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func main() {
