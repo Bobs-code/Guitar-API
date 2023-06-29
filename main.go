@@ -19,6 +19,7 @@ func handleRequests() {
 	// Route for the home page
 	r.Get("/", homePage)
 
+	// Routes for Guitars resource
 	r.Route("/guitars", func(r chi.Router) {
 		r.Get("/", GetAllGuitars)
 		r.Get("/{guitarId}", GetSingleGuitar)
@@ -27,8 +28,14 @@ func handleRequests() {
 		r.Delete("/guitar/delete/{guitarId}", DeleteGuitar)
 	})
 
-	// http.HandleFunc("/guitar", getSingleGuitar)
-	// http.HandleFunc("/guitars", getAllGuitars)
+	// Routes for Mucisian Resources
+	r.Route("/mucisians", func(r chi.Router) {
+		r.Get("/", AllMusicians)
+		r.Get("/{musicianId}", Musician)
+		r.Put("/musicians/create", NewMusician)
+		r.Patch("/musicians/update/{musicianId}", UpdateMusician)
+		r.Delete("/musician/delete{musicianId}", DeleteMusician)
+	})
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
