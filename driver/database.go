@@ -1,4 +1,4 @@
-package main
+package driver
 
 import (
 	"database/sql"
@@ -14,12 +14,28 @@ const (
 	dbname   = "guitars"
 )
 
-type Guitar struct {
-	Id          int    `json:"id"`
-	Brand_id    int    `json:"brand_id"`
-	Model       string `json:"model"`
-	Year        int    `json:"year"`
-	Description string `json:"description"`
+
+
+type DB struct {
+	SQL *sql.DB
+}
+
+var dbConn = &DB{}
+
+func ConnectSQL(host, port, uname, pass, dbname string) (*DB, error) {
+	dbSource := fmt.Sprintf("root:%s$tcp(%s:%s)/%s?charset=utf8",
+		pass,
+		host,
+		port,
+		dbname,
+	)
+
+	d, err := sql.Open("psql", dbSource)
+	if err != nil {
+		panic(err)
+	}
+	dbConn.SQL = d
+	return dbConn, err
 }
 
 // Make connection to the database
