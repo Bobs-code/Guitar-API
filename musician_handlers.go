@@ -152,3 +152,25 @@ func UpdateMusician(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 }
+
+func DeleteMusician(w http.ResponseWriter, r *http.Request) {
+	db := DbConnection()
+	urlId := r.URL.Query().Get("id")
+	urlIdInt, err := strconv.Atoi(urlId)
+	if err != nil {
+		panic(err)
+	}
+
+	sql := `DELETE FROM musicians WHERE id = $1`
+
+	res, err := db.Exec(sql, urlIdInt)
+	if err != nil {
+		panic(err)
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(count)
+	defer db.Close()
+}
