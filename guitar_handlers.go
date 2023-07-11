@@ -40,7 +40,7 @@ func DbQueryAllGuitars() []Guitar {
 
 // GET guitar record form dbQuerySingleRecord
 func GetSingleGuitar(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-type", "application/json")
 	db := DbConnection()
 	defer db.Close()
 	// To retrieve a particular record form the database, we need to pass an id paremeter to the URL. We will use the following methods and assign it to the urlId variable

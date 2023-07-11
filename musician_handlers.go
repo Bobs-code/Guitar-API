@@ -22,7 +22,7 @@ func dbQueryAllMusicians() []Musician {
 	sql := "SELECT * FROM musicians"
 	rows, err := db.Query(sql)
 	if err != nil {
-		fmt.Printf("Querry Error, and %s", err)
+		fmt.Printf("Query Error, and %s", err)
 
 	}
 
