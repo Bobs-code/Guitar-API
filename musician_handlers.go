@@ -1,9 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 type Musician struct {
@@ -12,6 +14,7 @@ type Musician struct {
 	Guitar int    `json:"primary_guitar_id"`
 }
 
+// Get access to all of the muisician resources
 func dbQueryAllMusicians() []Musician {
 	db := DbConnection()
 	var multipleMusicians []Musician
@@ -40,6 +43,7 @@ func dbQueryAllMusicians() []Musician {
 	return multipleMusicians
 }
 
+// Return all musician resources
 func GetAllMusicians(w http.ResponseWriter, r *http.Request) {
 	data := dbQueryAllMusicians()
 	w.Header().Set("Content-type", "application/json")
@@ -51,6 +55,42 @@ func GetAllMusicians(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Get a single musician resource
+func GetMusician(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	db := DbConnection()
+	defer db.Close()
+
+	urlId := r.URL.Query().Get("id")
+
+	urlIdInt, err := strconv.Atoi(urlId)
+	if err != nil {
+		panic(err)
+	}
+
+	sqlStatement := "SELECT * FROM musicians WHERE ID = $1"
+
+	row := db.QueryRow(sqlStatement, urlIdInt)
+
+	var musician Musician
+
+	switch err := row.Scan(&musician.Id, &musician.Name, &musician.Guitar); err {
+	case sql.ErrNoRows:
+		fmt.Println("nno rows were returned.")
+	case nil:
+		fmt.Println(`record from the database: `, musician)
+	default:
+		panic(err)
+	}
+
+	err = json.NewEncoder(w).Encode(musician)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// Create a new musician resource
 func AddMusician(w http.ResponseWriter, r *http.Request) {
 	db := DbConnection()
 	defer db.Close()
@@ -77,3 +117,5 @@ func AddMusician(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Musician with Id %d was created", id)
 }
+
+//
