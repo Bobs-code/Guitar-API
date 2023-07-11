@@ -68,7 +68,7 @@ func AddMusician(w http.ResponseWriter, r *http.Request) {
 
 	id := 0
 
-	err = db.QueryRow(sql, musician.Id, musician.Name, musician.Guitar).Scan(&id)
+	err = db.QueryRow(sql, musician.Name, musician.Guitar).Scan(&id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
