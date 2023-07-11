@@ -55,10 +55,19 @@ func musicianRequests() {
 	http.HandleFunc("/musicians/update", UpdateMusician)
 	http.HandleFunc("/musicians/delete", DeleteMusician)
 }
+
+func brandRequests() {
+	http.HandleFunc("/brand", GetBrand)
+	http.HandleFunc("/brands", GetAllBrands)
+	http.HandleFunc("/brands/create", NewBrand)
+	http.HandleFunc("/brands/update", UpdateBrand)
+	http.HandleFunc("/brands/delete", DeleteBrand)
+}
 func handleRequests() {
 	http.HandleFunc("/", homePage)
 	guitarRequests()
 	musicianRequests()
+	brandRequests()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
