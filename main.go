@@ -49,11 +49,11 @@ func guitarRequests() {
 }
 
 func musicianRequests() {
-	// http.HandleFunc("/musician", GetSingleMusician)
+	http.HandleFunc("/musician", GetMusician)
 	http.HandleFunc("/musicians", GetAllMusicians)
 	http.HandleFunc("/musicians/create", AddMusician)
-	// http.HandleFunc("/musicians/update", UpdateMusician)
-	// http.HandleFunc("/musicians/delete", DeleteMusician)
+	http.HandleFunc("/musicians/update", UpdateMusician)
+	http.HandleFunc("/musicians/delete", DeleteMusician)
 }
 func handleRequests() {
 	http.HandleFunc("/", homePage)
