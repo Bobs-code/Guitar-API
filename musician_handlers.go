@@ -118,4 +118,37 @@ func AddMusician(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Musician with Id %d was created", id)
 }
 
-//
+// Update a musician resource
+func UpdateMusician(w http.ResponseWriter, r *http.Request) {
+	db := DbConnection()
+	defer db.Close()
+
+	w.Header().Set("Content-Type", "application/json")
+
+	url := r.URL.Query().Get("id")
+
+	urlIdInt, err := strconv.Atoi(url)
+	if err != nil {
+		panic(err)
+	}
+
+	var musician Musician
+
+	err = json.NewDecoder(r.Body).Decode(&musician)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	sql := `UPDATE musicians
+	SET name = $2, primary_guitar_id = $3 
+	WHERE id = $1
+	`
+
+	_, err = db.Exec(sql, urlIdInt, musician.Name, musician.Guitar)
+	if err != nil {
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+}
