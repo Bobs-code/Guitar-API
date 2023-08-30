@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
@@ -68,17 +68,18 @@ func dbQueryAllGuitars() []Guitar {
 }
 
 // GET guitar record form dbQuerySingleRecord
-func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func getSingleGuitar(c *gin.Context) {
+	// w.Header().Set("Content-Type", "application/json")
 	db := dbConnection()
 	defer db.Close()
 	// To retrieve a particular record form the database, we need to pass an id paremeter to the URL. We will use the following methods and assign it to the urlId variable
-	urlId := r.URL.Query().Get("id")
+	urlId := c.Param("id")
 
 	// To add a layer of security, we will cast the urlId param to an integer from a string. This will be passed into the database query below.
 	urlIdInt, err := strconv.Atoi(urlId)
 	if err != nil {
-		panic(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
 	}
 
 	sqlStatement := "SELECT * FROM guitars WHERE id = $1;"
@@ -89,18 +90,14 @@ func getSingleGuitar(w http.ResponseWriter, r *http.Request) {
 
 	switch err := row.Scan(&singleGuitar.Id, &singleGuitar.Brand_id, &singleGuitar.Model, &singleGuitar.Year, &singleGuitar.Description); err {
 	case sql.ErrNoRows:
-		fmt.Println("No rows were returned!")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Guitar not found"})
 	case nil:
-		fmt.Println(`Record from the database: `, singleGuitar)
+		fmt.Println("Record from the database: ", singleGuitar)
 	default:
-		panic(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 	}
 
-	err = json.NewEncoder(w).Encode(singleGuitar)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	c.JSON(http.StatusOK, singleGuitar)
 }
 
 // GET request to return data from dbReturnAllGuitars()
@@ -206,21 +203,25 @@ func updateGuitar(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "GuitarAPI Project Home Page")
+func homePage(c *gin.Context) {
+	c.Writer.WriteString("GuitarAPI Project Home Page")
+
 	fmt.Println("Endpoint Hit: Home Page")
 }
 
 func handleRequests() {
-	http.HandleFunc("/", homePage)
-	http.HandleFunc("/guitar", getSingleGuitar)
+
 	http.HandleFunc("/guitars", getAllGuitars)
 	http.HandleFunc("/guitar/create", newGuitar)
 	http.HandleFunc("/guitar/update", updateGuitar)
 	http.HandleFunc("/guitar/delete", deleteGuitar)
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func main() {
+	r := gin.Default()
+	r.GET("/", homePage)
+	r.GET("/guitar/:id", getSingleGuitar)
+
+	r.Run("localhost:8080")
 	handleRequests()
 }
