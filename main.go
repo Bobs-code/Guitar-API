@@ -7,17 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
-)
+	"github.com/Bobs-Code/Guitar-API/conns"
 
-const (
-	// Replace constants with correct values
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "placeholder"
-	dbname   = "guitars"
+	"github.com/gin-gonic/gin"
 )
 
 type Guitar struct {
@@ -28,26 +20,9 @@ type Guitar struct {
 	Description string `json:"description"`
 }
 
-// Make connection to the database
-func dbConnection() *sql.DB {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s"+" password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
-	// Open Postgres connection using above login statement
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	// defer db.Close()
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Successfully connected to database")
-	return db
-}
-
 // SELECT all guitars from database
 func dbQueryAllGuitars() []Guitar {
-	db := dbConnection()
+
 	var multipleGuitars []Guitar
 	// Query all Guitars from db
 	sql := "SELECT * FROM guitars "
@@ -69,9 +44,7 @@ func dbQueryAllGuitars() []Guitar {
 
 // GET guitar record form dbQuerySingleRecord
 func getSingleGuitar(c *gin.Context) {
-	// w.Header().Set("Content-Type", "application/json")
-	db := dbConnection()
-	defer db.Close()
+
 	// To retrieve a particular record form the database, we need to pass an id paremeter to the URL. We will use the following methods and assign it to the urlId variable
 	urlId := c.Param("id")
 
@@ -101,27 +74,19 @@ func getSingleGuitar(c *gin.Context) {
 }
 
 // GET request to return data from dbReturnAllGuitars()
-func getAllGuitars(w http.ResponseWriter, r *http.Request) {
+func getAllGuitars(c *gin.Context) {
 	data := dbQueryAllGuitars()
-	w.Header().Set("Content-type", "application/json")
-	fmt.Println("Get single guitar endpoint hit")
-	err := json.NewEncoder(w).Encode(data)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
+	c.JSON(http.StatusOK, data)
+	fmt.Println("Get all guitars endpoint hit")
 }
 
 // POST request INSERTING a guitar to the database
-func newGuitar(w http.ResponseWriter, r *http.Request) {
-	db := dbConnection()
-	defer db.Close()
-	w.Header().Set("Content-type", "application/json")
+func newGuitar(c *gin.Context) {
 
 	var guitar Guitar
-	err := json.NewDecoder(r.Body).Decode(&guitar)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+
+	if err := c.ShouldBindJSON(&guitar); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -129,20 +94,23 @@ func newGuitar(w http.ResponseWriter, r *http.Request) {
 	INSERT INTO guitars (brand_id, model, year, description)
 	VALUES ($1, $2, $3, $4)
 	returning id`
-	id := 0
-	err = db.QueryRow(sqlStatement, guitar.Brand_id, guitar.Model, guitar.Year, guitar.Description).Scan(&id)
+
+	var id int
+	err := db.QueryRow(sqlStatement, guitar.Brand_id, guitar.Model, guitar.Year, guitar.Description).Scan(&id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Item with ID %d was created", id)
+
+	guitar.Id = id
+	c.JSON(http.StatusCreated, guitar)
+	// w.WriteHeader(http.StatusCreated)
+	// fmt.Fprintf(w, "Item with ID %d was created", id)
 }
 
 // DELETE request
 func deleteGuitar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
-	db := dbConnection()
 
 	// To retrieve a particular record form the database, we need to pass an id paremeter to the URL. We will use the following methods and assign it to the urlId variable
 	urlId := r.URL.Query().Get("id")
@@ -164,13 +132,11 @@ func deleteGuitar(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	fmt.Println(count)
-	defer db.Close()
+
 }
 
 // Update request
 func updateGuitar(w http.ResponseWriter, r *http.Request) {
-	db := dbConnection()
-	defer db.Close()
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -205,23 +171,23 @@ func updateGuitar(w http.ResponseWriter, r *http.Request) {
 
 func homePage(c *gin.Context) {
 	c.Writer.WriteString("GuitarAPI Project Home Page")
-
 	fmt.Println("Endpoint Hit: Home Page")
 }
 
 func handleRequests() {
 
-	http.HandleFunc("/guitars", getAllGuitars)
-	http.HandleFunc("/guitar/create", newGuitar)
 	http.HandleFunc("/guitar/update", updateGuitar)
 	http.HandleFunc("/guitar/delete", deleteGuitar)
 }
 
 func main() {
+	conns.InitPGDB()
 	r := gin.Default()
 	r.GET("/", homePage)
 	r.GET("/guitar/:id", getSingleGuitar)
+	r.GET("/guitars", getAllGuitars)
+	r.PUT("/guitar/create", newGuitar)
 
 	r.Run("localhost:8080")
-	handleRequests()
+
 }
