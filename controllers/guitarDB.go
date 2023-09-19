@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 
@@ -52,4 +53,25 @@ func GetGuitars() []models.Guitar {
 		guitars = append(guitars, eachGuitar)
 	}
 	return guitars
+}
+
+func GetSingleGuitar(id int) (*models.Guitar, error) {
+	InitPGDB()
+	defer db.Close()
+
+	var singleGuitar models.Guitar
+
+	sqlStatement := "SELECT * FROM guitars WHERE id = $1;"
+
+	row := db.QueryRow(sqlStatement, id)
+
+	switch err := row.Scan(&singleGuitar.Id, &singleGuitar.Brand_id, &singleGuitar.Model, &singleGuitar.Year, &singleGuitar.Description); err {
+	case sql.ErrNoRows:
+		return nil, fmt.Errorf("no guitar found with id %d", id)
+	case nil:
+		fmt.Println("Record from the database: ", singleGuitar)
+		return &singleGuitar, nil
+	default:
+		return nil, fmt.Errorf("internal server error")
+	}
 }
