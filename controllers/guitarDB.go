@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/Bobs-code/Guitar-API/models"
 	"github.com/jmoiron/sqlx"
@@ -15,7 +16,7 @@ const (
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = "placeholder"
+	password = "please_work"
 	dbname   = "guitars"
 )
 
@@ -74,4 +75,22 @@ func GetSingleGuitar(id int) (*models.Guitar, error) {
 	default:
 		return nil, fmt.Errorf("internal server error")
 	}
+}
+
+func NewGuitar() {
+	InitPGDB()
+	var guitar models.Guitar
+
+	sqlStatement := `
+	INSERT INTO guitars (brand_id, model, year, description)
+	VALUES ($1, $2, $3, $4)
+	returning id`
+	id := 0
+	err := db.QueryRow(sqlStatement, guitar.Brand_id, guitar.Model, guitar.Year, guitar.Description).Scan(&id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "Item with ID %d was created", id)
 }
